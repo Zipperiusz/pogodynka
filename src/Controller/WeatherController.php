@@ -2,29 +2,86 @@
 
 namespace App\Controller;
 
-use App\Entity\Location;
+use App\Entity\Weather;
+use App\Form\WeatherType;
 use App\Repository\WeatherRepository;
+use App\Repository\LocationRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+#[Route('/weather')]
 class WeatherController extends AbstractController
 {
-    #[Route('/weather/{city}/{country?}', name: 'app_weather')]
-public function city(string $city, string $country = null, WeatherRepository $repository): Response
-{
-    $location = $repository->findLocationByCityAndCountry($city, $country);
-    
-    if (!$location) {
-        throw $this->createNotFoundException('Location not found');
+    #[Route('/', name: 'app_weather_index', methods: ['GET'])]
+    public function index(WeatherRepository $weatherRepository, LocationRepository $locationRepository): Response
+    {
+        return $this->render('weather/index.html.twig', [
+            'locations' => $locationRepository->findAll(),
+            'weather' => $weatherRepository->findAll(),
+        ]);
+    }    
+
+    #[Route('/new', name: 'app_weather_new', methods: ['GET', 'POST'])]
+    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $weather = new Weather();
+        $form = $this->createForm(WeatherType::class, $weather, [
+            'validation_groups' => 'create',
+        ]);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->persist($weather);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('app_weather_index', [], Response::HTTP_SEE_OTHER);
+        }
+
+        return $this->render('weather/new.html.twig', [
+            'weather' => $weather,
+            'form' => $form,
+        ]);
     }
 
-    $weathers = $repository->findByLocation($location);
+    #[Route('/{id}', name: 'app_weather_show', methods: ['GET'])]
+    public function show(Weather $weather): Response
+    {
+        return $this->render('weather/show.html.twig', [
+            'weather' => $weather,
+        ]);
+    }
 
-    return $this->render('weather/city.html.twig', [
-        'location' => $location,
-        'weathers' => $weathers,
-    ]);
-}
+    #[Route('/{id}/edit', name: 'app_weather_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, Weather $weather, EntityManagerInterface $entityManager): Response
+    {
+        $form = $this->createForm(WeatherType::class, $weather,  [
+            'validation_groups' => 'edit',
+        ]);
+        $form->handleRequest($request);
 
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+
+            return $this->redirectToRoute('app_weather_index', [], Response::HTTP_SEE_OTHER);
+        }
+
+        return $this->render('weather/edit.html.twig', [
+            'weather' => $weather,
+            'form' => $form,
+        ]);
+    }
+
+    #[Route('/{id}', name: 'app_weather_delete', methods: ['POST'])]
+    public function delete(Request $request, Weather $weather, EntityManagerInterface $entityManager): Response
+    {
+        if ($this->isCsrfTokenValid('delete'.$weather->getId(), $request->request->get('_token'))) {
+            $entityManager->remove($weather);
+            $entityManager->flush();
+        }
+
+        return $this->redirectToRoute('app_weather_index', [], Response::HTTP_SEE_OTHER);
+    }
 }
