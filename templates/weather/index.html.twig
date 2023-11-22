@@ -28,14 +28,9 @@
                 <td>{{ weather.wind }}</td>
                 <td>{{ weather.rainchance }}</td>
                 <td>{{ weather.isgrilltime ? 'Yes' : 'No' }}</td>
-                
                 <td>
-                    {% if is_granted('ROLE_WEATHER_SHOW') %}
                     <a href="{{ path('app_weather_show', {'id': weather.id}) }}">show</a>
-                    {% endif %}
-                    {% if is_granted('ROLE_WEATHER_EDIT') %}
                     <a href="{{ path('app_weather_edit', {'id': weather.id}) }}">edit</a>
-                    {% endif %}
                 </td>
             </tr>
         {% else %}
@@ -45,7 +40,6 @@
         {% endfor %}
         </tbody>
     </table>
-    {% if is_granted('ROLE_WEATHER_NEW') %}
-        <a href="{{ path('app_weather_new') }}">Create new</a>
-    {% endif %}
+
+    <a href="{{ path('app_weather_new') }}">Create new</a>
 {% endblock %}
