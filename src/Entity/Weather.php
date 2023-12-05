@@ -20,16 +20,16 @@ class Weather
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 1)]
     private ?string $temperature = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable:true)]
     private ?int $humidity = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2,nullable:true)]
     private ?string $wind = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable:true)]
     private ?int $rainchance = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable:true)]
     private ?bool $isgrilltime = null;
 
     #[ORM\ManyToOne(inversedBy: 'weather')]
